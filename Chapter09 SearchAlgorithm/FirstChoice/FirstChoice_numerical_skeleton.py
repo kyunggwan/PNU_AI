@@ -3,6 +3,7 @@ import math
 
 DELTA = 0.01   # Mutation step size
 NumEval = 0    # Total number of evaluations
+LIMIT_STUCK = 100 # MAx number of evaluations enduring no 
 
 
 def main():
@@ -10,9 +11,8 @@ def main():
     # 입력 txt 파일에서 수식과 변수의 범위를 읽어와 반환
     p = createProblem()   # 'p': (expr, domain)
 
-    # # Call the search algorithm
     # # SteepestAscent 알고리즘을 실행하여 solution을 구하기
-    solution, minimum = steepestAscent(p)
+    solution, minimum = firstChoice(p)
 
     # # Show the problem and algorithm settings
     describeProblem(p) 
@@ -23,34 +23,27 @@ def main():
 
 
 def createProblem(): ###
- 
-    # path_file = input('Enter the file name: ')
-    # f = open(path_file, 'r')
-    # path_file = input('Enter the file name: ')
-    f = open('tsp30.txt', 'r')
-    numCities = int(f.readline())
-    locations = []
-    line = f.readline()
+   
+    f = open('Griewank.txt', 'r')
+    expression = f.readline().rstrip()
 
+    varNames = []
+    low = []
+    up = []
+
+    line = f.readline().rstrip()
     while line != '':
-        locations.append(eval(line))
-        line = f.readline()
+        d = line.split(',')
+        varNames.append(d[0])
+        low.append(eval(d[1]))
+        up.append(eval(d[2]))
 
-    f.close()
-    table = calcDistanceTable(numCities, locations)
-    return numCities, locations, table
+        line = f.readline().rstrip()
 
-def calcDistanceTable(numCities, locations):
-    table = []
-    for i in range(numCities):
-        row=[]
-        for j in range(numCities):
-            dx = locations[i][0] - locations[j][0]
-            dy = locations[i][1] - locations[j][1]
-            d = round(math.sqrt(dx**2 + dy**2), 1)
-            row.append(d)
-        table.append(row)
-    return table
+    domain = [varNames, low, up]
+
+    return expression, domain
+
 
 def steepestAscent(p):
     # Random한 초기값을 생성
@@ -63,16 +56,7 @@ def steepestAscent(p):
     while True:
         # mutant를 생성
         neighbors = mutants(current, p)
-        # mutant 중 가장 좋은 solution을 선택
-        # 각각의 neighbor에 대해서 함수 값을 계산 해 보고,
-        # 현재 값 보다 좋은 것이 있으면 거기로 이동하고 싶다!!
-        # successor, valueS = bestOf(neighbors, p)
-        # if valueS >= valueC:
-        #     break
-        # else:
-        #     current = successor
-        #     valueC = valueS
-    
+
         best, bestValue = bestOf(neighbors, p)
         
         # best solution 업데이트
@@ -85,13 +69,30 @@ def steepestAscent(p):
     # Best solution과 그때의 Cost를 반환
     return current, valueC
 
+def firstChoice(p):
+    # Random한 초기값을 생성
+    # randomInit 사용
+    current = randomInit(p)
+    # 초기값에 대한 함수값을 계산
+    valueC = evaluate(current, p)
+    i = 0
+    # 계산을 반복하며 mutant를 생성후 더 나은 solution을 탐색
+    while i < LIMIT_STUCK:
+        successor = randomMutant(current, p)
+        valueS = evaluate(successor, p)
+        
+        # best solution 업데이트
+        if valueS > valueC:
+            current = successor
+            valueC = valueS
+            i = 0
+        else:
+            i += 1
+    
+    return current, valueC
 
 def randomInit(p):
-    # Return a random initial point
-    # as a list of values
-    # 초기 값을 만들기 위해 랜덤한 값들을 만들기
-    # domain 안에 low, up 정보가 있으므로 가져와야 함
-    # 'p': (expr, domain)
+ 
     domain = p[1]
     low, up = domain[1], domain[2]
     init = []
@@ -130,13 +131,6 @@ def evaluate(current, p):
     expr = p[0]
     valueC = eval(expr)
 
-    # x1, x2, x3, x4, x5 에 현재 값을 저장
-    # -> 'x1=0.5' 와 같은 형태로 string을 만들어서 eval 함수 이용
-    # --> 왜냐하면, 'x1', 'x2'와 같은 변수 명을 저장해 두었기 때문!
-    # ---> exec('x1' + '=' + str(CURRENT_VALUE)) --> 결과적으로 x1에 CURRENT_VALUE가 할당됨.
-    # expression을 eval 하여 현재 함수 값을 계산한다. eval(expression)
-
-
     # 함수를 current 를 이용해서 계산했을때의 값
     return valueC
 
@@ -173,6 +167,15 @@ def mutate(current, i, d, p): ## Mutate i-th of 'current' if legal
 
     # neighbor: 값이 5개 들어있는 list (current와 동일한 형태)
     return neighbor
+
+def randomMutant(current, p):
+    i = random.randint(0, len(current) - 1)
+
+    if random.uniform(0, 1) > 0.5:
+        d = DELTA
+    else: 
+        d = -DELTA
+    return mutate(current, i, d, p)
 
 def bestOf(neighbors, p):
     # neighbors 각각에 대한 evaluation을 실시하여

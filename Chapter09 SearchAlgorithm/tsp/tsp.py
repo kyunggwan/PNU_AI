@@ -3,7 +3,6 @@ import math
 
 DELTA = 0.01   # Mutation step size
 NumEval = 0    # Total number of evaluations
-LIMIT_STUCK = 100 # MAx number of evaluations enduring no 
 
 
 def main():
@@ -13,9 +12,7 @@ def main():
 
     # # Call the search algorithm
     # # SteepestAscent 알고리즘을 실행하여 solution을 구하기
-    # solution, minimum = steepestAscent(p)
-
-    solution, minimum = firstChoice(p)
+    solution, minimum = steepestAscent(p)
 
     # # Show the problem and algorithm settings
     describeProblem(p) 
@@ -26,54 +23,34 @@ def main():
 
 
 def createProblem(): ###
-    ## Read in an expression and its domain from a file.
-    ## Then, return a problem 'p'.
-    ## 'p' is a tuple of 'expression' and 'domain'.
-    ## 'expression' is a string.
-    ## 'expression'은 txt 파일의 첫 줄에 있는 수식 string
-    ## 'domain' is a list of 'varNames', 'low', and 'up'.
-    ## txt 파일의 두 번째 줄 부터는 변수명,최소값,최대값
-    ## 'varNames' is a list of variable names.
-    ## 'varNames'는 각 변수의 이름이 저장 됨
-    ## 'low' is a list of lower bounds of the varaibles.
-    ## 'low'에는 각 변수의 최소값이 저장됨
-    ## 'up' is a list of upper bounds of the varaibles.
-    ## 'up'에는 각 변수의 최대값이 저장됨
-
-    # input function을 이용해 읽어올 txt 파일의 경로를 얻어옴
-    # readline()을 이용해 각 줄의 정보를 읽어옴
-
-    # Convex.txt 를 읽어왔을 경우 예시
-    # expression: '(x1 - 2) ** 2 +5 * (x2 - 5) ** 2 + 8 * (x3 + 8) ** 2 + 3 * (x4 + 1) ** 2 + 6 * (x5 - 7) ** 2'
-    # domain: [
-    #           ['x1', 'x2, 'x3', 'x4', 'x5'],
-    #           [-30, -30, -30, -30, -30],
-    #           [30, 30, 30, 30, 30]
-    #         ]  # 2중 리스트 임!
-
+ 
     # path_file = input('Enter the file name: ')
     # f = open(path_file, 'r')
     # path_file = input('Enter the file name: ')
-    f = open('Griewank.txt', 'r')
-    expression = f.readline().rstrip()
+    f = open('tsp30.txt', 'r')
+    numCities = int(f.readline())
+    locations = []
+    line = f.readline()
 
-    varNames = []
-    low = []
-    up = []
-
-    line = f.readline().rstrip()
     while line != '':
-        d = line.split(',')
-        varNames.append(d[0])
-        low.append(eval(d[1]))
-        up.append(eval(d[2]))
+        locations.append(eval(line))
+        line = f.readline()
 
-        line = f.readline().rstrip()
+    f.close()
+    table = calcDistanceTable(numCities, locations)
+    return numCities, locations, table
 
-    domain = [varNames, low, up]
-
-    return expression, domain
-
+def calcDistanceTable(numCities, locations):
+    table = []
+    for i in range(numCities):
+        row=[]
+        for j in range(numCities):
+            dx = locations[i][0] - locations[j][0]
+            dy = locations[i][1] - locations[j][1]
+            d = round(math.sqrt(dx**2 + dy**2), 1)
+            row.append(d)
+        table.append(row)
+    return table
 
 def steepestAscent(p):
     # Random한 초기값을 생성
@@ -108,27 +85,6 @@ def steepestAscent(p):
     # Best solution과 그때의 Cost를 반환
     return current, valueC
 
-def firstChoice(p):
-    # Random한 초기값을 생성
-    # randomInit 사용
-    current = randomInit(p)
-    # 초기값에 대한 함수값을 계산
-    valueC = evaluate(current, p)
-    i = 0
-    # 계산을 반복하며 mutant를 생성후 더 나은 solution을 탐색
-    while i < LIMIT_STUCK:
-        successor = randomMutant(current, p)
-        valueS = evaluate(successor, p)
-        
-        # best solution 업데이트
-        if valueS > valueC:
-            current = successor
-            valueC = valueS
-            i = 0
-        else:
-            i += 1
-    
-    return current, valueC
 
 def randomInit(p):
     # Return a random initial point
@@ -218,15 +174,6 @@ def mutate(current, i, d, p): ## Mutate i-th of 'current' if legal
     # neighbor: 값이 5개 들어있는 list (current와 동일한 형태)
     return neighbor
 
-def randomMutant(current, p):
-    i = random.randint(0, len(current) - 1)
-
-    if random.uniform(0, 1) > 0.5:
-        d = DELTA
-    else: 
-        d = -DELTA
-    return mutate(current, i, d, p)
-
 def bestOf(neighbors, p):
     # neighbors 각각에 대한 evaluation을 실시하여
     # 가장 좋은 solution을 best로 선정 후 반환
@@ -246,34 +193,31 @@ def bestOf(neighbors, p):
 
 def describeProblem(p):
     print()
-    print("Objective function:")
-    # expression 출력
-    print(p[0])   # Expression
-    print("Search space:")
-    # Domain 정보 출력
-    varNames = p[1][0] # p[1] is domain: [VarNames, low, up]
-    low = p[1][1]
-    up = p[1][2]
-    for i in range(len(low)):
-        print(" " + varNames[i] + ":", (low[i], up[i])) 
+    n = p[0]
+    print("Number of cities:", n)
+    print("City locations:")
+    locations = p[1]
+    for i in range(n):
+        print("{0:>12}".format(str(locations[i])), end = '')
+        if i % 5 == 4:
+            print()
 
 def displaySetting():
     print()
     print("Search algorithm: Steepest-Ascent Hill Climbing")
-    print()
-    print("Mutation step size:", DELTA)
 
 def displayResult(solution, minimum):
     print()
-    print("Solution found:")
-    print(coordinate(solution))  # Convert list to tuple
-    print("Minimum value: {0:,.3f}".format(minimum))
+    print("Best order of visits:")
+    tenPerRow(solution)       # Print 10 cities per row
+    print("Minimum tour cost: {0:,}".format(round(minimum)))
     print()
     print("Total number of evaluations: {0:,}".format(NumEval))
 
-def coordinate(solution):
-    c = [round(value, 3) for value in solution]
-    return tuple(c)  # Convert the list to a tuple
-
+def tenPerRow(solution):
+    for i in range(len(solution)):
+        print("{0:>5}".format(solution[i]), end='')
+        if i % 10 == 9:
+            print()
 
 main()
