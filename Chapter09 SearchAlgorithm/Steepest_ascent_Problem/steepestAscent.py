@@ -69,6 +69,4 @@ def displaySetting(Numeric_class):
     print("Mutation step size:", Numeric_class.getDelta())
 
 
-
-
 main()
