@@ -1,11 +1,10 @@
 import random
 import math
 
-# self => 내 자신에 대한 참조가 필요해서, 
+
 class Problem:
     def __init__(self):
-        
-        self._solution = None
+        self._solution = []
         self._value = 0
         self._numEval = 0
 
@@ -38,107 +37,103 @@ class Problem:
 
 class Numeric(Problem):
     def __init__(self):
-        # super를 생성해야 Problem의 변수들이 Numeric에 생긴다.
-        # super 빼먹지 말것
-        super().__init__()
-        self._DELTA = 0.01 
+        Problem.__init__(self)
         self._expression = ''
-        self._domain = []
-
+        self._domain = []     # domain as a list
+        self._delta = 0.01    # Step size for axis-parallel mutation
+    
     def setVariables(self):
-        # file = input('Enter the file name: ')
-        # f = open('file', 'r')
-        f = open('Convex.txt', 'r')
-        self._expression = f.readline().rstrip()
-
-        varNames = []
-        low = []
-        up = []
-
-        line = f.readline().rstrip()
+        ## Read in a function and its domain from a file
+        ## Then, set the relevant class variables
+        fileName = input("Enter the file name of a function: ")
+        infile = open(fileName, 'r')
+        self._expression = infile.readline() # as a string
+        varNames = []  # Variable names
+        low = []       # Lower bounds
+        up = []        # Upper bounds
+        line = infile.readline()
         while line != '':
-            d = line.split(',')
-            varNames.append(d[0])
-            low.append(eval(d[1]))
-            up.append(eval(d[2]))
-
-            line = f.readline().rstrip()
-
+            data = line.split(',')  # read from CSV
+            varNames.append(data[0])
+            low.append(float(data[1]))
+            up.append(float(data[2]))
+            line = infile.readline()
+        infile.close()
         self._domain = [varNames, low, up]
 
     def getDelta(self):
-        return self._DELTA
+        return self._delta
 
     def randomInit(self): # Return a random initial point as a list
-        low, up = self._domain[1], self._domain[2]
+        domain = self._domain
+        low, up = domain[1], domain[2]
         init = []
-
-        for i in range(len(low)):
-            init.append(random.uniform(low[i], up[i]))
-        return init
+        for i in range(len(low)):              # For each variable
+            r = random.uniform(low[i], up[i])  # take a random value
+            init.append(r)
+        return init  # list of values
 
     def evaluate(self, current):
+        ## Evaluate the expression of 'p' after assigning
+        ## the values of 'current' to the variables
         self._numEval += 1
-        varName = self._domain[0] # 여기에서 변수 명을 참조
-
-        for i in range(len(varName)):
-            cmd = varName[i] + '=' + str(current[i])
-            exec(cmd) # exec는 선언해서 넣는 것
-
-        valueC = eval(self._expression)
-        return valueC
+        expr = self._expression
+        varNames = self._domain[0]
+        for i in range(len(varNames)):
+            assignment = varNames[i] + '=' + str(current[i])
+            exec(assignment)
+        return eval(expr)
 
     def mutants(self, current):
         neighbors = []
-
-        for i in range(len(current)):
-            m = self.mutate(current, i, self._DELTA)
-            neighbors.append(m)
-            m = self.mutate(current, i, -self._DELTA)
-            neighbors.append(m)
-        
+        for i in range(len(current)):  # For each variable
+            mutant = self.mutate(current, i, self._delta)
+            neighbors.append(mutant)
+            mutant = self.mutate(current, i, -self._delta)
+            neighbors.append(mutant)
         return neighbors
-        
-    def mutate(self, current, i, d): ## Mutate i-th of 'current' if legal
-        neighbor = current[:]
-        low, up = self._domain[1], self._domain[2]
 
-        if low[i] <= neighbor[i] + d <= up[i]:
-            neighbor[i] += d
-            
-        return neighbor 
+    def mutate(self, current, i, d): ## Mutate i-th of 'current' if legal
+        mutant = current[:]   # Make a copy of 'current'
+        domain = self._domain # [VarNames, low, up]
+        l = domain[1][i]      # Lower bound of i-th
+        u = domain[2][i]      # Upper bound of i-th
+        if l <= (mutant[i] + d) <= u:
+            mutant[i] += d
+        return mutant
 
     def randomMutant(self, current):
+        # Pick a random locus
         i = random.randint(0, len(current) - 1)
+        # Mutate the chosen locus
         if random.uniform(0, 1) > 0.5:
-            d = self._DELTA
+            d = self._delta
         else:
-            d = -self._DELTA
+            d = -self._delta
         return self.mutate(current, i, d)
 
     def describe(self):
         print()
         print("Objective function:")
-        # expression 출력
-        print(self._expression)   # Expression
+        print(self._expression)
         print("Search space:")
-        # Domain 정보 출력
-        varNames = self._domain[0] # p[1] is domain: [VarNames, low, up]
+        varNames = self._domain[0] # domain: [VarNames, low, up]
         low = self._domain[1]
         up = self._domain[2]
         for i in range(len(low)):
-            print(" " + varNames[i] + ":", (low[i], up[i])) 
+            print(" " + varNames[i] + ":", (low[i], up[i]))
 
     def report(self):
-       print()
-       print("Solution found:")
-       print(self.coordinate())  # Convert list to tuple
-       print("Minimum value: {0:,.3f}".format(self._value))
-       super().report()
+        print()
+        print("Solution found:")
+        print(self.coordinate())  # Convert list to tuple
+        print("Minimum value: {0:,.3f}".format(self._value))
+        Problem.report(self)
 
     def coordinate(self):
         c = [round(value, 3) for value in self._solution]
         return tuple(c)  # Convert the list to a tuple
+
 
 class Tsp(Problem):
     def __init__(self):
