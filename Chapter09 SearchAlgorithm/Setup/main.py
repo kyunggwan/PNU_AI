@@ -27,6 +27,7 @@ def selectAlgorithm(pType):
     print(" 1. Steepest-Ascent")
     print(" 2. First-Choice")
     print(" 3. Gradient Descent")
+    print(" 4. Stochastic")
     
     while True:
         aType = int(input("Enter the number: "))
@@ -34,7 +35,8 @@ def selectAlgorithm(pType):
             break
     optimizers = { 1: 'SteepestAscent()', 
                    2: 'FirstChoice()',
-                   3: 'GradientDescent()'}
+                   3: 'GradientDescent()',
+                   4: 'Stochastic()'}
     alg = eval(optimizers[aType])
     alg.setVariables(pType)
     return alg

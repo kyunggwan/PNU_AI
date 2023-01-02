@@ -1,4 +1,5 @@
 from setup import Setup
+import random
 
 class HillClimbing(Setup):
     def __init__(self):
@@ -88,3 +89,40 @@ class GradientDescent(HillClimbing):
                 currentP = nextP
                 valueC = valueN
         p.storeResult(currentP, valueC)
+
+class Stochastic(HillClimbing):
+    def displaySetting(self):
+        print()
+        print("Search Algorithm: Stochastic Hill Climbing")
+        print()
+        HillClimbing.displaySetting(self)
+
+    def run(self, p):
+        current = p.randomInit()
+        valueC = p.evaluate(current)
+        i = 0
+        while i < self._limitStuck:
+            neighbors = p.mutants(current)
+            successor, valueS = self.stochasticBest(neighbors, p)
+            if valueS < valueC:
+                current = successor
+                valueC = valueS
+                i = 0
+            else:
+                i += 1
+        p.storeResult(current, valueC)
+
+    def stochasticBest(self, neighbors, p):
+        valuesForMin = [p.evaluate(indiv) for indiv in neighbors]
+        largeValue = max(valuesForMin) + 1 
+        valuesForMax = [largeValue - val for val in valuesForMin]
+
+        total = sum(valuesForMax)
+        randValue = random.uniform(0, total)
+        s = valuesForMax[0]
+        for i in range(len(valuesForMax)):
+            if randValue <= s:
+                break
+            else:
+                s += valuesForMax[i+1]
+        return neighbors[i], valuesForMin[i]

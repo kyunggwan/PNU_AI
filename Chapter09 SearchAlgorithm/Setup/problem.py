@@ -44,14 +44,13 @@ class Numeric(Problem):
         self._delta = 0.01    # Step size for axis-parallel mutation
     
     def setVariables(self):
-        ## Read in a function and its domain from a file
-        ## Then, set the relevant class variables
+        
         fileName = input("Enter the file name of a function: ")
         infile = open(fileName, 'r')
         self._expression = infile.readline() # as a string
-        varNames = []  # Variable names
-        low = []       # Lower bounds
-        up = []        # Upper bounds
+        varNames = []  
+        low = []       
+        up = []        
         line = infile.readline()
         while line != '':
             data = line.split(',')  # read from CSV
@@ -75,8 +74,7 @@ class Numeric(Problem):
         return init  # list of values
 
     def evaluate(self, current):
-        ## Evaluate the expression of 'p' after assigning
-        ## the values of 'current' to the variables
+        
         self._numEval += 1
         expr = self._expression
         varNames = self._domain[0]
@@ -87,7 +85,7 @@ class Numeric(Problem):
 
     def mutants(self, current):
         neighbors = []
-        for i in range(len(current)):  # For each variable
+        for i in range(len(current)):  
             mutant = self.mutate(current, i, self._delta)
             neighbors.append(mutant)
             mutant = self.mutate(current, i, -self._delta)
@@ -148,7 +146,7 @@ class Numeric(Problem):
         print("Objective function:")
         print(self._expression)
         print("Search space:")
-        varNames = self._domain[0] # domain: [VarNames, low, up]
+        varNames = self._domain[0] 
         low = self._domain[1]
         up = self._domain[2]
         for i in range(len(low)):
