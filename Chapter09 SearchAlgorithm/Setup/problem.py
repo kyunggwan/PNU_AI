@@ -1,9 +1,10 @@
 import random
 import math
+from setup import Setup
 
-
-class Problem():
+class Problem(Setup):
     def __init__(self):
+        Setup.__init__(self)
         self._solution = []
         self._value = 0
         self._numEval = 0
@@ -112,6 +113,36 @@ class Numeric(Problem):
             d = -self._delta
         return self.mutate(current, i, d)
 
+    def takeStep(self, x, v): 
+        grad = self.gradient(x, v)
+        xCopy = x[:]
+        for i in range(len(xCopy)):
+            xCopy[i] = xCopy[i] - self._alpha * grad[i]
+        if self.isLegal(xCopy):
+            return xCopy
+        else:
+            return x
+
+    def gradient(self, x, v):
+        grad = []
+        for i in range(len(x)):
+            xCopyH = x[:]
+            xCopyH[i] += self._dx
+            g = (self.evaluate(xCopyH) - v) / self._dx
+            grad.append(g)
+        return grad
+
+    def isLegal(self, x):
+        domain = self._domain 
+        low = domain[1]
+        up = domain[2]
+        flag = True
+        for i in range(len(low)):
+            if x[i] < low[i] or up[i] < x[i]:
+                flag = False
+                break
+        return flag
+
     def describe(self):
         print()
         print("Objective function:")
@@ -133,7 +164,7 @@ class Numeric(Problem):
     def coordinate(self):
         c = [round(value, 3) for value in self._solution]
         return tuple(c)  # Convert the list to a tuple
-
+      
 
 class Tsp(Problem):
     def __init__(self):

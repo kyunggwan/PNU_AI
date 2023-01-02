@@ -7,8 +7,8 @@ def main():
     alg.run(p)
     p.describe()
     alg.displaySetting()
+    p.report()
     
-
 def selectProblem():
     print("Select the problem type:")
     print(" 1. Numerical Optimization")
@@ -35,5 +35,16 @@ def selectAlgorithm(pType):
     optimizers = { 1: 'SteepestAscent()', 
                    2: 'FirstChoice()',
                    3: 'GradientDescent()'}
+    alg = eval(optimizers[aType])
+    alg.setVariables(pType)
+    return alg
 
-                   
+def invalid(pType, aType):
+    if pType == 2 and aType == 3:
+        print("You cannot choose Gradient Descent")
+        print("   unless your want a function optimization.")
+        return True
+    else:
+        return False
+
+main()         
