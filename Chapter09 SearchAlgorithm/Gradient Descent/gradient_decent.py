@@ -120,6 +120,7 @@ def gradient(x, v, dx, p):
 
     grad = []
     
+
     # x의 갯수만큼 인덱스 이동
     for i in range(len(x)): 
         # 원본 리스트를 복사해서 새로 만듦
