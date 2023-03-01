@@ -1,7 +1,7 @@
 # PNU_AI Programming
 
 [K-Digital 부산대] AI 활용 빅데이터분석 풀스택웹서비스 W 개발자 양성 과정
-<!--
+
 ## Chapter01 Basics of Python
 - Values and Types
 - Numbers
@@ -67,7 +67,7 @@
 - Local Search Algorithms
 - Genetic Algorithm
 
--->
+
 
 <a href="https://blog.naver.com/kjh920411/221889422562/" target="_blank">
 <img src = "https://blogfiles.pstatic.net/MjAyMDA0MDNfMTA2/MDAxNTg1OTExMDQ1NTI5.P17sN8p2a9-VLxBj925pnc5VObM_bjGZXMF9b_dW_zcg.B3qmjqddpLwMzuH02GGhkM79Nxut3pmCGhVe-PGx6dIg.PNG.kjh920411/image.png"> <a/> <br/>
